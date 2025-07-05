@@ -167,6 +167,11 @@ after_bundle do
   end
 
   # CONVERTIR TODO .erb a .haml
+  puts "*"*50
+  puts "*"*50
+  puts "Converting all .erb files to .haml..."
+  puts "*"*50
+  puts "*"*50
   run "bundle exec rails haml:erb2haml"
 
   # BORRAR los archivos .erb originales
