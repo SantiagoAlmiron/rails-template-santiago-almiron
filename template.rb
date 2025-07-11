@@ -23,7 +23,7 @@ inject_into_file "Gemfile", after: "group :development, :test do" do
     gem "factory_bot_rails"
     gem "rubocop", require: false
     gem "rubocop-rails", require: false
-    gem "rspec-rails", "~> 8.0", require: false
+    gem "rspec-rails", "~> 7.0", require: false
     gem "rubocop-rspec", require: false
     gem "html2haml", require: false
 
