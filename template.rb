@@ -103,22 +103,16 @@ RUBY
 
 environment general_config
 
-run "bundle install"
-
 ########################################
 # After bundle
 ########################################
 after_bundle do
-  # Install gems
-  ########################################
-  run "rails generate rspec:install"
-
   # Generators: db + simple form + pages controller
   ########################################
   rails_command "db:drop db:create db:migrate"
   generate("simple_form:install", "--bootstrap")
   generate(:controller, "pages", "home", "--skip-routes", "--no-test-framework")
-
+  generate("rspec:install")
   # Routes
   ########################################
   route 'root to: "pages#home"'
