@@ -5,13 +5,13 @@ run "if uname | grep -q 'Darwin'; then pgrep spring | xargs kill -9; fi"
 inject_into_file "Gemfile", before: "group :development, :test do" do
   <<~RUBY
 
-    gem "bootstrap", "~> 5.3"
-    gem "devise"
-    gem "autoprefixer-rails"
-    gem "font-awesome-sass", "~> 6.1"
-    gem "simple_form", github: "heartcombo/simple_form"
-    gem "sassc-rails"
-    gem "haml-rails"
+    gem 'bootstrap', '~> 5.3'
+    gem 'devise'
+    gem 'autoprefixer-rails'
+    gem 'font-awesome-sass', '~> 6.1'
+    gem 'simple_form', github: 'heartcombo/simple_form'
+    gem 'sassc-rails'
+    gem 'haml-rails'
   RUBY
 end
 
@@ -44,16 +44,22 @@ gsub_file(
 )
 
 # Flashes
-file "app/views/shared/_flashes.html.haml", <<~HAML
-  - if notice
-    .alert.alert-info.alert-dismissible.fade.show.m-1{ role: "alert" }
-      = notice
-      %button.btn-close{ type: "button", "data-bs-dismiss": "alert", "aria-label": "Close" }
-  - if alert
-    .alert.alert-warning.alert-dismissible.fade.show.m-1{ role: "alert" }
-      = alert
-      %button.btn-close{ type: "button", "data-bs-dismiss": "alert", "aria-label": "Close" }
-HAML
+file "app/views/shared/_flashes.html.erb", <<~HTML
+  <% if notice %>
+    <div class="alert alert-info alert-dismissible fade show m-1" role="alert">
+      <%= notice %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+      </button>
+    </div>
+  <% end %>
+  <% if alert %>
+    <div class="alert alert-warning alert-dismissible fade show m-1" role="alert">
+      <%= alert %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+      </button>
+    </div>
+  <% end %>
+HTML
 
 # Navbar (descargamos en .erb, lo convertimos a .haml después)
 run "curl -L https://github.com/lewagon/awesome-navbars/master/templates/_navbar_wagon.html.erb > app/views/shared/_navbar.html.erb"
