@@ -113,6 +113,7 @@ after_bundle do
   generate("simple_form:install", "--bootstrap")
   generate(:controller, "pages", "home", "--skip-routes", "--no-test-framework")
   # generate("rspec:install")
+
   # Routes
   ########################################
   route 'root to: "pages#home"'
@@ -209,7 +210,7 @@ after_bundle do
   run "curl -L https://raw.githubusercontent.com/lewagon/rails-templates/master/.rubocop.yml > .rubocop.yml"
 
   # CONVERTIR TODO .erb a .haml
-  run "bundle exec rails haml:erb2haml"
+  # run "bundle exec rails haml:erb2haml"
 
   # Git
   ########################################
