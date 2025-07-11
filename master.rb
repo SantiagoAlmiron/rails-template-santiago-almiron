@@ -25,7 +25,7 @@ inject_into_file "Gemfile", after: "group :development, :test do" do
     gem 'rubocop', require: false
     gem 'rubocop-rails', require: false
     gem 'rubocop-rspec', require: false
-
+    gem 'html2haml', require: false
   RUBY
 end
 
@@ -43,21 +43,17 @@ gsub_file(
   '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">'
 )
 
-# Flashes (HAML ya los convertimos después)
-file "app/views/shared/_flashes.html.erb", <<~HTML
-  <% if notice %>
-    <div class="alert alert-info alert-dismissible fade show m-1" role="alert">
-      <%= notice %>
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-  <% end %>
-  <% if alert %>
-    <div class="alert alert-warning alert-dismissible fade show m-1" role="alert">
-      <%= alert %>
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-  <% end %>
-HTML
+# Flashes
+file "app/views/shared/_flashes.html.haml", <<~HAML
+  - if notice
+    .alert.alert-info.alert-dismissible.fade.show.m-1 role="alert"
+      = notice
+      %button.btn-close{ type: "button", "data-bs-dismiss": "alert", "aria-label": "Close" }
+  - if alert
+    .alert.alert-warning.alert-dismissible.fade.show.m-1 role="alert"
+      = alert
+      %button.btn-close{ type: "button", "data-bs-dismiss": "alert", "aria-label": "Close" }
+HAML
 
 # Navbar (descargamos en .erb, lo convertimos a .haml después)
 run "curl -L https://raw.githubusercontent.com/lewagon/awesome-navbars/master/templates/_navbar_wagon.html.erb > app/views/shared/_navbar.html.erb"
@@ -168,11 +164,6 @@ after_bundle do
   end
 
   # CONVERTIR TODO .erb a .haml
-  puts "*"*50
-  puts "*"*50
-  puts "Converting all .erb files to .haml..."
-  puts "*"*50
-  puts "*"*50
   run "bundle exec rails haml:erb2haml"
 
   # BORRAR los archivos .erb originales
