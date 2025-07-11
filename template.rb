@@ -213,7 +213,7 @@ after_bundle do
   # run "bundle exec rails haml:erb2haml"
 
   # REMOVE TEST FILES
-  run "rm -rf test"
+  # run "rm -rf test"
 
   # Git
   ########################################
