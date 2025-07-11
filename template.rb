@@ -15,8 +15,9 @@ inject_into_file "Gemfile", before: "group :development, :test do" do
   RUBY
 end
 
-inject_into_file "Gemfile", after: "group :development, :test do\n" do
+inject_into_file "Gemfile", after: "group :development, :test do" do
     <<~RUBY
+    \n
     gem "dotenv-rails"
     gem "faker"
     gem "factory_bot_rails"
