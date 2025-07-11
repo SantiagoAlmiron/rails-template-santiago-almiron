@@ -103,6 +103,8 @@ RUBY
 
 environment general_config
 
+run "bundle install"
+
 ########################################
 # After bundle
 ########################################
