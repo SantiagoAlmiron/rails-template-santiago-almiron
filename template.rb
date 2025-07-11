@@ -112,7 +112,7 @@ after_bundle do
   rails_command "db:drop db:create db:migrate"
   generate("simple_form:install", "--bootstrap")
   generate(:controller, "pages", "home", "--skip-routes", "--no-test-framework")
-  generate("rspec:install")
+  # generate("rspec:install")
   # Routes
   ########################################
   route 'root to: "pages#home"'
