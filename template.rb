@@ -212,6 +212,9 @@ after_bundle do
   # CONVERTIR TODO .erb a .haml
   # run "bundle exec rails haml:erb2haml"
 
+  # REMOVE TEST FILES
+  run "rm -rf test"
+
   # Git
   ########################################
   git :init
