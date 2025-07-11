@@ -1,7 +1,7 @@
-# Matar Spring en MacOS
 run "if uname | grep -q 'Darwin'; then pgrep spring | xargs kill -9; fi"
 
-# Gemas generales
+# Gemfile
+########################################
 inject_into_file "Gemfile", before: "group :development, :test do" do
   <<~RUBY
     gem "bootstrap", "~> 5.3"
@@ -15,28 +15,35 @@ inject_into_file "Gemfile", before: "group :development, :test do" do
   RUBY
 end
 
-# Gemas de development y test
 inject_into_file "Gemfile", after: "group :development, :test do" do
-  <<~RUBY
+    <<~RUBY
     gem "dotenv-rails"
     gem "faker"
     gem "factory_bot_rails"
     gem "rubocop", require: false
     gem "rubocop-rails", require: false
+    gem "rspec-rails", "~> 8.0", require: false
     gem "rubocop-rspec", require: false
     gem "html2haml", require: false
 
   RUBY
 end
 
-# Borrar estilos y bajar estilos base de Le Wagon
+# Install gems
+########################################
+run "rails generate rspec:install"
+
+# Assets
+########################################
 run "rm -rf app/assets/stylesheets"
 run "rm -rf vendor"
 run "curl -L https://github.com/lewagon/rails-stylesheets/archive/master.zip > stylesheets.zip"
 run "unzip stylesheets.zip -d app/assets && rm -f stylesheets.zip && rm -f app/assets/rails-stylesheets-master/README.md"
 run "mv app/assets/rails-stylesheets-master app/assets/stylesheets"
 
-# Layout viewport fix
+# Layout
+########################################
+
 gsub_file(
   "app/views/layouts/application.html.erb",
   '<meta name="viewport" content="width=device-width,initial-scale=1">',
@@ -44,6 +51,7 @@ gsub_file(
 )
 
 # Flashes
+########################################
 file "app/views/shared/_flashes.html.erb", <<~HTML
   <% if notice %>
     <div class="alert alert-info alert-dismissible fade show m-1" role="alert">
@@ -61,57 +69,87 @@ file "app/views/shared/_flashes.html.erb", <<~HTML
   <% end %>
 HTML
 
-# Navbar (descargamos en .erb, lo convertimos a .haml después)
-run "curl -L https://github.com/lewagon/awesome-navbars/master/templates/_navbar_wagon.html.erb > app/views/shared/_navbar.html.erb"
+run "curl -L https://raw.githubusercontent.com/lewagon/awesome-navbars/master/templates/_navbar_wagon.html.erb > app/views/shared/_navbar.html.erb"
+
+inject_into_file "app/views/layouts/application.html.erb", after: "<body>" do
+  <<~HTML
+    <%= render "shared/navbar" %>
+    <%= render "shared/flashes" %>
+  HTML
+end
 
 # README
-file "README.md", <<~MARKDOWN, force: true
-  Rails app generated with a custom template based on [lewagon/rails-templates](https://github.com/lewagon/rails-templates), MIT licensed.
+########################################
+markdown_file_content = <<~MARKDOWN
+  Rails app generated with [lewagon/rails-templates](https://github.com/lewagon/rails-templates), created by the [Le Wagon coding bootcamp](https://www.lewagon.com) team.
 MARKDOWN
+file "README.md", markdown_file_content, force: true
 
 # Generators
-environment <<~RUBY
-  config.generators do |g|
-    g.assets false
-    g.helper false
-    g.test_framework :rspec, fixture: false
-    g.template_engine :haml
+########################################
+generators = <<~RUBY
+  config.generators do |generate|
+    generate.assets false
+    generate.helper false
+    generate.test_framework :rspec, fixture: false
+    generate.template_engine :haml
   end
 RUBY
 
-# General config
-environment 'config.action_controller.raise_on_missing_callback_actions = false if Rails.version >= "7.1.0"'
+environment generators
 
+# General Config
+########################################
+general_config = <<~RUBY
+  config.action_controller.raise_on_missing_callback_actions = false if Rails.version >= "7.1.0"
+RUBY
+
+environment general_config
+
+########################################
+# After bundle
+########################################
 after_bundle do
-  # Simple Form + Pages controller
+  # Generators: db + simple form + pages controller
+  ########################################
   rails_command "db:drop db:create db:migrate"
   generate("simple_form:install", "--bootstrap")
   generate(:controller, "pages", "home", "--skip-routes", "--no-test-framework")
+
+  # Routes
+  ########################################
   route 'root to: "pages#home"'
 
-  # .gitignore
+  # Gitignore
+  ########################################
   append_file ".gitignore", <<~TXT
+    # Ignore .env file containing credentials.
     .env*
+
+    # Ignore Mac and Linux file system files
     *.swp
     .DS_Store
   TXT
 
-  # Devise
+  # Devise install + user
+  ########################################
   generate("devise:install")
   generate("devise", "User")
 
-  # Application controller con autenticación
-  file "app/controllers/application_controller.rb", <<~RUBY, force: true
+  # Application controller
+  ########################################
+  run "rm app/controllers/application_controller.rb"
+  file "app/controllers/application_controller.rb", <<~RUBY
     class ApplicationController < ActionController::Base
       before_action :authenticate_user!
     end
   RUBY
 
-  # Devise views
+  # migrate + devise views
+  ########################################
   rails_command "db:migrate"
   generate("devise:views")
 
-  # Cambiar "cancel my account" link por button
   link_to = <<~HTML
     <p>Unhappy? <%= link_to "Cancel my account", registration_path(resource_name), data: { confirm: "Are you sure?" }, method: :delete %></p>
   HTML
@@ -123,20 +161,25 @@ after_bundle do
   HTML
   gsub_file("app/views/devise/registrations/edit.html.erb", link_to, button_to)
 
-  # Pages controller (skip autenticación en home)
-  file "app/controllers/pages_controller.rb", <<~RUBY, force: true
+  # Pages Controller
+  ########################################
+  run "rm app/controllers/pages_controller.rb"
+  file "app/controllers/pages_controller.rb", <<~RUBY
     class PagesController < ApplicationController
-      skip_before_action :authenticate_user!, only: [:home]
+      skip_before_action :authenticate_user!, only: [ :home ]
 
-      def home; end
+      def home
+      end
     end
   RUBY
 
-  # Action mailer
+  # Environments
+  ########################################
   environment 'config.action_mailer.default_url_options = { host: "http://localhost:3000" }', env: "development"
   environment 'config.action_mailer.default_url_options = { host: "http://TODO_PUT_YOUR_DOMAIN_HERE" }', env: "production"
 
-  # Bootstrap y Popper
+  # Bootstrap & Popper
+  ########################################
   append_file "config/importmap.rb", <<~RUBY
     pin "bootstrap", to: "bootstrap.min.js", preload: true
     pin "@popperjs/core", to: "popper.js", preload: true
@@ -156,36 +199,23 @@ after_bundle do
     //= link bootstrap.min.js
   JS
 
-  # Plataforma Linux para Heroku
+  # Heroku
+  ########################################
   run "bundle lock --add-platform x86_64-linux"
 
-  # Archivo .env
-  run "touch .env"
+  # Dotenv
+  ########################################
+  run "touch '.env'"
 
-  # FactoryBot config con RSpec
-  inject_into_file "spec/rails_helper.rb", after: "RSpec.configure do |config|\n" do
-    <<~RUBY
-      config.include FactoryBot::Syntax::Methods
-    RUBY
-  end
+  # Rubocop
+  ########################################
+  run "curl -L https://raw.githubusercontent.com/lewagon/rails-templates/master/.rubocop.yml > .rubocop.yml"
 
   # CONVERTIR TODO .erb a .haml
   run "bundle exec rails haml:erb2haml"
-
-  # BORRAR los archivos .erb originales
-  run "find app/views -name '*.erb' -delete"
-
-  # Inyectar navbar y flashes en layout Haml
-  inject_into_file "app/views/layouts/application.html.haml", after: "%body" do
-    <<~HAML
-
-      = render 'shared/navbar'
-      = render 'shared/flashes'
-    HAML
-  end
-
   # Git
+  ########################################
   git :init
   git add: "."
-  git commit: "-m 'Initial commit from custom template (100% HAML)'"
+  git commit: "-m 'Initial commit with devise template from https://github.com/lewagon/rails-templates'"
 end
