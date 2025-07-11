@@ -30,10 +30,6 @@ inject_into_file "Gemfile", after: "group :development, :test do" do
   RUBY
 end
 
-# Install gems
-########################################
-run "rails generate rspec:install"
-
 # Assets
 ########################################
 run "rm -rf app/assets/stylesheets"
@@ -111,6 +107,10 @@ environment general_config
 # After bundle
 ########################################
 after_bundle do
+  # Install gems
+  ########################################
+  run "rails generate rspec:install"
+
   # Generators: db + simple form + pages controller
   ########################################
   rails_command "db:drop db:create db:migrate"
